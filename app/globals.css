@@ -1,26 +1,40 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #1e1e1e;
+  --surface: #252526;
+  --border: #007acc;
+  --teal: #4ec9b0;
+  --red: #ff6b6b;
+  --orange: #ce9178;
+  --text: #d4d4d4;
+  --keyword: #569cd6;
+  --func: #dcdcaa;
+  --number: #b5cea8;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Roboto Mono', monospace;
+  min-height: 100vh;
+}
+
+.code-keyword { color: var(--keyword); font-weight: bold; }
+.code-func { color: var(--func); font-weight: bold; }
+.code-operator { color: var(--orange); font-weight: bold; }
+.code-string { color: var(--orange); }
+.code-number { color: var(--number); font-weight: bold; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.35s ease-out both;
 }
