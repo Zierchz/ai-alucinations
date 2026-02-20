@@ -4,7 +4,19 @@ import { questions } from "@/data/questions";
 import type { Option, Question } from "@/lib/types";
 
 export async function getQuestions(): Promise<Question[]> {
-  return questions;
+  // Shuffle and return 20 questions (5 rounds per player × 4 players)
+  const shuffled = [...questions].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, 20);
+}
+
+export async function getTiebreakerQuestions(
+  usedIds: number[],
+): Promise<Question[]> {
+  const remaining = questions.filter((q) => !usedIds.includes(q.id));
+  if (remaining.length === 0) {
+    throw new Error("No remaining questions for tiebreaker");
+  }
+  return remaining.sort(() => Math.random() - 0.5);
 }
 
 export async function checkAnswer(

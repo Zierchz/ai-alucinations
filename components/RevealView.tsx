@@ -11,6 +11,8 @@ interface Props {
   playerName: string;
   onNext: () => void;
   isLast: boolean;
+  timeout?: boolean;
+  nextLabel?: string;
 }
 
 const OPTIONS: Option[] = ["A", "B", "C", "D"];
@@ -22,6 +24,8 @@ export default function RevealView({
   playerName,
   onNext,
   isLast,
+  timeout,
+  nextLabel,
 }: Props) {
   return (
     <div className="max-w-4xl mx-auto animate-fade-in">
@@ -43,7 +47,11 @@ export default function RevealView({
         </span>
         <span>
           {playerName} —{" "}
-          {revealData.correct ? "¡Correcto! +1 punto" : "Incorrecto"}
+          {revealData.correct
+            ? "¡Correcto! +1 punto"
+            : timeout
+              ? "⏱ Se acabó el tiempo"
+              : "Incorrecto"}
         </span>
       </div>
 
@@ -111,7 +119,8 @@ export default function RevealView({
           onClick={onNext}
           className="px-8 py-3 bg-linear-to-r from-[#007acc] to-[#4ec9b0] text-white font-bold font-mono rounded-xl hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg shadow-[#007acc]/20 cursor-pointer"
         >
-          {isLast ? "Ver Resultados Finales" : "Siguiente Pregunta →"}
+          {nextLabel ??
+            (isLast ? "Ver Resultados Finales" : "Siguiente Pregunta →")}
         </button>
       </div>
     </div>
