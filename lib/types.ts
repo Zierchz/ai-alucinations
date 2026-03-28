@@ -3,6 +3,7 @@ export type Option = "A" | "B" | "C" | "D";
 export interface Question {
   id: number;
   language: string;
+  vulnerability: string;
   task: string;
   options: Record<Option, string>;
   answer: Option;

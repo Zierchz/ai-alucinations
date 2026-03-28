@@ -1,563 +1,657 @@
-﻿import type { Question } from "@/lib/types";
+import type { Question } from "@/lib/types";
 
 export const questions: Question[] = [
+  // ── SQL Injection ──────────────────────────────────────
   {
     id: 1,
-    language: "PHP",
-    task: "Crear un array vacío.",
+    language: "Python",
+    vulnerability: "SQL Injection",
+    task: "Buscar un usuario por nombre.",
     options: {
-      A: "$lista = list();",
-      B: "$lista = array();",
-      C: "$lista = [];",
-      D: "$lista = (array) null;",
+      A: `cursor.execute(f"SELECT * FROM users WHERE name='{name}'")`,
+      B: `cursor.execute("SELECT * FROM users WHERE name=%s", (name,))`,
+      C: `cursor.execute("SELECT * FROM users WHERE name=?", (name,))`,
+      D: `cursor.execute("SELECT * FROM users WHERE name=:n", {"n": name})`,
     },
     answer: "A",
     explanation:
-      "`list()` en PHP es una construcción de lenguaje para asignar variables desde un array, no para crear un array vacío.",
+      "El f-string inserta name directo en el SQL. Si name es ' OR 1=1 --, se ejecuta SQL malicioso. Las demás usan parámetros que escapan el valor.",
   },
   {
     id: 2,
-    language: "TypeScript",
-    task: "Definir una interfaz Usuario donde `edad` es opcional.",
+    language: "PHP",
+    vulnerability: "SQL Injection",
+    task: "Verificar login de un usuario.",
     options: {
-      A: "interface Usuario { nombre: string; edad?: number; }",
-      B: "interface Usuario { nombre: string; edad: Optional<number>; }",
-      C: "interface Usuario { nombre: string; edad: number | undefined; }",
-      D: "type Usuario = { nombre: string; edad?: number };",
+      A: `$stmt = $pdo->prepare("SELECT * FROM users WHERE email=?");\n$stmt->execute([$email]);`,
+      B: `mysqli_query($conn, "SELECT * FROM users WHERE email='$email'");`,
+      C: `$stmt = $pdo->prepare("SELECT * FROM users WHERE email=:e");\n$stmt->execute(['e' => $email]);`,
+      D: `$stmt = $pdo->prepare("SELECT * FROM users WHERE email=?");\n$stmt->bindParam(1, $email);\n$stmt->execute();`,
     },
     answer: "B",
     explanation:
-      "No existe un tipo nativo `Optional` en TypeScript (a diferencia de Java). La sintaxis correcta para opcional es el signo de interrogación `?`.",
+      "$email se concatena directo en el SQL. Un atacante envía ' OR '1'='1 como email y accede sin contraseña. Las demás usan prepared statements.",
   },
   {
     id: 3,
     language: "Java",
-    task: "Crear un objeto File para `data.txt`.",
+    vulnerability: "SQL Injection",
+    task: "Eliminar un producto por ID.",
     options: {
-      A: 'File f = File.create("data.txt");',
-      B: 'Path p = Paths.get("data.txt");',
-      C: 'var f = new File("data.txt");',
-      D: 'File f = new File("data.txt");',
-    },
-    answer: "A",
-    explanation:
-      "La clase `File` no tiene un método estático `create` que devuelva un objeto File. Se usa el constructor `new File(...)`.",
-  },
-  {
-    id: 4,
-    language: "C#",
-    task: "Crear un saludo con la variable `nombre`.",
-    options: {
-      A: 'var mensaje = "Hola " + nombre;',
-      B: 'var mensaje = string.Format("Hola {0}", nombre);',
-      C: 'var mensaje = $"Hola {nombre}";',
-      D: 'var mensaje = "Hola ${nombre}";',
-    },
-    answer: "D",
-    explanation:
-      'La interpolación de cadenas en C# requiere el símbolo `$` antes de las comillas de apertura (`$"..."`). Poner el símbolo dentro de la cadena (`"${...}"`) es sintaxis de JavaScript (Template Literals), no de C#.',
-  },
-  {
-    id: 5,
-    language: "Python",
-    task: 'Convertir la lista `strings = ["1", "2", "3"]` a una lista de enteros.',
-    options: {
-      A: "enteros = [int(x) for x in strings]",
-      B: "enteros = list(map(int, strings))",
-      C: "enteros = strings.map(int)",
-      D: "enteros = []\nfor s in strings:\n    enteros.append(int(s))",
-    },
-    answer: "C",
-    explanation:
-      "Las listas en Python no tienen un método `.map()`. Este método pertenece a la función global `map()` que devuelve un iterador, o es común en otros lenguajes, pero no es un método de la clase `list`.",
-  },
-  {
-    id: 6,
-    language: "Python",
-    task: 'Imprimir "Hola" sin saltar a la siguiente línea (Python 3).',
-    options: {
-      A: 'print("Hola", end="")',
-      B: 'print("Hola", newline=False)',
-      C: 'import sys\nsys.stdout.write("Hola")',
-      D: "print('Hola', end=' ')",
+      A: `PreparedStatement ps = conn.prepareStatement("DELETE FROM products WHERE id=?");\nps.setInt(1, id);\nps.executeUpdate();`,
+      B: `stmt.executeUpdate("DELETE FROM products WHERE id=" + id);`,
+      C: `conn.prepareStatement("DELETE FROM products WHERE id=?")\n  .setString(1, String.valueOf(id));`,
+      D: `em.createQuery("DELETE FROM Product p WHERE p.id=:id")\n  .setParameter("id", id).executeUpdate();`,
     },
     answer: "B",
     explanation:
-      "La función `print()` en Python no acepta un argumento `newline`. El argumento correcto para definir el final de la línea es `end`.",
+      "Se concatena id con + en el SQL. Si id es '1 OR 1=1' se borran todos los registros. PreparedStatement con ? evita esto.",
+  },
+  {
+    id: 4,
+    language: "Go",
+    vulnerability: "SQL Injection",
+    task: "Buscar productos por nombre.",
+    options: {
+      A: `db.Query("SELECT * FROM products WHERE name=?", name)`,
+      B: `db.Query(fmt.Sprintf("SELECT * FROM products WHERE name='%s'", name))`,
+      C: `db.Query("SELECT * FROM products WHERE name=$1", name)`,
+      D: `stmt, _ := db.Prepare("SELECT * FROM products WHERE name=$1")\nstmt.Query(name)`,
+    },
+    answer: "B",
+    explanation:
+      "fmt.Sprintf inserta name directo en el SQL sin escapar. Un atacante puede romper la comilla e inyectar SQL. Las demás usan placeholders (? o $1).",
+  },
+  {
+    id: 5,
+    language: "C#",
+    vulnerability: "SQL Injection",
+    task: "Buscar clientes por ciudad.",
+    options: {
+      A: `cmd = new SqlCommand("SELECT * FROM clients WHERE city=@c", conn);\ncmd.Parameters.AddWithValue("@c", city);`,
+      B: `cmd = new SqlCommand($"SELECT * FROM clients WHERE city='{city}'", conn);`,
+      C: `context.Clients.Where(c => c.City == city).ToList();`,
+      D: `cmd = new SqlCommand("SELECT * FROM clients WHERE city=@c", conn);\ncmd.Parameters.Add("@c", SqlDbType.NVarChar).Value = city;`,
+    },
+    answer: "B",
+    explanation:
+      "El string interpolado $\"...\" inserta city directo en el SQL. Un atacante inyecta '; DROP TABLE clients;--. Las demás usan parámetros @c o LINQ.",
+  },
+
+  // ── XSS ────────────────────────────────────────────────
+  {
+    id: 6,
+    language: "JavaScript",
+    vulnerability: "XSS (Cross-Site Scripting)",
+    task: "Mostrar un comentario del usuario.",
+    options: {
+      A: `element.textContent = comment;`,
+      B: `element.innerHTML = comment;`,
+      C: `element.innerText = comment;`,
+      D: `element.appendChild(document.createTextNode(comment));`,
+    },
+    answer: "B",
+    explanation:
+      "innerHTML interpreta HTML. Si comment es <script>alert('XSS')</script>, el navegador lo ejecuta. textContent e innerText tratan todo como texto plano.",
   },
   {
     id: 7,
-    language: "Python",
-    task: "Separar `texto` por comas.",
+    language: "PHP",
+    vulnerability: "XSS (Cross-Site Scripting)",
+    task: "Mostrar el nombre del usuario.",
     options: {
-      A: 'texto.explode(",")',
-      B: "texto.split(',')",
-      C: "import re\nre.split(',', texto)",
-      D: 'texto.split(",")',
+      A: `echo "Hola, " . $_GET['name'];`,
+      B: `echo "Hola, " . htmlspecialchars($_GET['name']);`,
+      C: `echo "Hola, " . strip_tags($_GET['name']);`,
+      D: `$n = htmlspecialchars($_GET['name'], ENT_QUOTES, 'UTF-8');\necho "Hola, $n";`,
     },
     answer: "A",
     explanation:
-      "El método `.explode()` es de PHP. En Python se usa `.split()`. Esta es una alucinación común donde la IA confunde métodos de diferentes lenguajes.",
+      "Imprime $_GET['name'] directo en HTML. Un atacante pone <script>alert(document.cookie)</script> en la URL para robar cookies. htmlspecialchars() escapa los caracteres peligrosos.",
   },
   {
     id: 8,
     language: "TypeScript",
-    task: "Comprobar si el objeto `usuario` tiene la propiedad `email`.",
+    vulnerability: "XSS (Cross-Site Scripting)",
+    task: "Mostrar el nombre de usuario en React.",
     options: {
-      A: "if ('email' in usuario) { ... }",
-      B: "if (usuario.hasOwnProperty('email')) { ... }",
-      C: "if (usuario.email !== undefined) { ... }",
-      D: "if (usuario.exists('email')) { ... }",
+      A: `<div>{user.name}</div>`,
+      B: `<div dangerouslySetInnerHTML={{ __html: user.name }} />`,
+      C: `<span>{String(user.name)}</span>`,
+      D: `<p>{user.name}</p>`,
     },
-    answer: "D",
+    answer: "B",
     explanation:
-      "Los objetos estándar en JavaScript/TypeScript no tienen un método `.exists()`. La forma correcta es usar `in`, `hasOwnProperty` o comprobar si es `undefined`.",
+      "dangerouslySetInnerHTML inyecta HTML sin escapar. Si user.name tiene <img onerror=alert('XSS')>, se ejecuta JS. React escapa automáticamente dentro de {llaves}.",
   },
+
+  // ── Command Injection ──────────────────────────────────
   {
     id: 9,
-    language: "Go",
-    task: "Quitar el elemento en el índice `i` del slice `lista`.",
+    language: "Python",
+    vulnerability: "Command Injection",
+    task: "Hacer ping a un servidor.",
     options: {
-      A: "lista = append(lista[:i], lista[i+1:]...)",
-      B: "copy(lista[i:], lista[i+1:])\nlista = lista[:len(lista)-1]",
-      C: "lista.remove(i)",
-      D: "lista = slices.Delete(lista, i, i+1) // Go 1.21+",
+      A: `os.system(f"ping -c 4 {host}")`,
+      B: `subprocess.run(["ping", "-c", "4", host])`,
+      C: `subprocess.run(["ping", "-c", "4", host], shell=False)`,
+      D: `subprocess.run(["ping", "-c", "4", shlex.quote(host)])`,
     },
-    answer: "C",
+    answer: "A",
     explanation:
-      "Go no es un lenguaje orientado a objetos puro y los slices no tienen métodos adjuntos como `.remove()`. Se deben usar operaciones de `append` o `copy` explícitas.",
+      "os.system() pasa todo al shell. Si host es '8.8.8.8; rm -rf /', se ejecutan ambos comandos. subprocess con lista separa comando de argumentos.",
   },
   {
     id: 10,
-    language: "TypeScript",
-    task: "Agregar el valor `5` al array `numeros`.",
+    language: "Java",
+    vulnerability: "Command Injection",
+    task: "Ejecutar ping al host del usuario.",
     options: {
-      A: "numeros.push(5);",
-      B: "numeros.append(5);",
-      C: "numeros[numeros.length] = 5;",
-      D: "numeros = [...numeros, 5];",
+      A: `new ProcessBuilder("ping", "-c", "4", host).start();`,
+      B: `Runtime.getRuntime().exec("ping -c 4 " + host);`,
+      C: `Runtime.getRuntime().exec(new String[]{"ping","-c","4",host});`,
+      D: `new ProcessBuilder("ping", "-c", "4", host)\n  .redirectErrorStream(true).start();`,
     },
     answer: "B",
     explanation:
-      "Los arrays en JS/TS no tienen un método `.append()`. Ese método es típico de Python o jQuery. El método correcto en JS es `.push()`.",
+      "Concatena host en un string para el shell. '8.8.8.8; cat /etc/passwd' ejecuta dos comandos. Pasar argumentos como array evita la inyección.",
   },
   {
     id: 11,
-    language: "Java",
-    task: "Verificar si `a` y `b` son iguales textualmente.",
+    language: "PHP",
+    vulnerability: "Command Injection",
+    task: "Redimensionar una imagen.",
     options: {
-      A: "if (a.equal(b)) { ... }",
-      B: "if (a.compareTo(b) == 0) { ... }",
-      C: "if (a.equals(b)) { ... }",
-      D: "if (a == b) { ... }",
+      A: `exec("convert " . $_GET['img'] . " -resize 100x100 out.jpg");`,
+      B: `exec("convert " . escapeshellarg($_GET['img']) . " -resize 100x100 out.jpg");`,
+      C: `$img = basename($_GET['img']);\nexec("convert " . escapeshellarg($img) . " out.jpg");`,
+      D: `$im = new Imagick(basename($_GET['img']));\n$im->thumbnailImage(100,100);\n$im->writeImage("out.jpg");`,
     },
     answer: "A",
     explanation:
-      "El método en Java es `equals` (plural). `equal` (singular) no existe. Es un error sutil pero frecuente en alucinaciones de IA.",
+      "$_GET['img'] va directo al comando shell. Si es 'a.jpg; rm -rf /', se ejecuta el borrado. escapeshellarg() protege envolviendo el valor entre comillas.",
   },
+
+  // ── Path Traversal ─────────────────────────────────────
   {
     id: 12,
     language: "Python",
-    task: "Obtener la cadena invertida de una variable `texto`.",
+    vulnerability: "Path Traversal",
+    task: "Descargar un archivo de uploads/.",
     options: {
-      A: 'invertido = ""\nfor char in texto:\n    invertido = char + invertido',
-      B: 'invertido = "".join(reversed(texto))',
-      C: "invertido = texto[::-1]",
-      D: "invertido = texto.reverse()",
+      A: `return open("uploads/" + filename).read()`,
+      B: `safe = os.path.basename(filename)\nreturn open(os.path.join("uploads", safe)).read()`,
+      C: `full = os.path.abspath(os.path.join("uploads", filename))\nassert full.startswith(os.path.abspath("uploads"))\nreturn open(full).read()`,
+      D: `from pathlib import Path\nbase = Path("uploads").resolve()\ntarget = (base / filename).resolve()\nassert str(target).startswith(str(base))\nreturn target.read_text()`,
     },
-    answer: "D",
+    answer: "A",
     explanation:
-      "Las cadenas (str) en Python no tienen un método `.reverse()`. Este método existe para listas, pero modifica la lista in-place y no devuelve nada. La IA suele alucinar este método transfiriendo conocimientos de otros lenguajes.",
+      "Concatena filename directo al path. Si es '../../etc/passwd', lee archivos del sistema. basename() extrae solo el nombre y abspath()+startswith() validan el directorio.",
   },
   {
     id: 13,
-    language: "Go",
-    task: "Obtener el año actual de la variable `t` (time.Time).",
+    language: "C#",
+    vulnerability: "Path Traversal",
+    task: "Servir un archivo al usuario.",
     options: {
-      A: "year := t.Year()",
-      B: "year := t.Year",
-      C: "year := t.getYear()",
-      D: "year := time.Year(t)",
+      A: `var path = Path.Combine("files", filename);\nreturn PhysicalFile(path, "application/octet-stream");`,
+      B: `var safe = Path.GetFileName(filename);\nreturn PhysicalFile(Path.Combine("files", safe), "application/octet-stream");`,
+      C: `var full = Path.GetFullPath(Path.Combine("files", filename));\nif (!full.StartsWith(Path.GetFullPath("files"))) return Forbid();\nreturn PhysicalFile(full, "application/octet-stream");`,
+      D: `var safe = Path.GetFileName(filename);\nvar full = Path.GetFullPath(Path.Combine("files", safe));\nreturn PhysicalFile(full, "application/octet-stream");`,
     },
-    answer: "C",
+    answer: "A",
     explanation:
-      "El método `.getYear()` no existe en Go. Esta es una alucinación donde la IA confunde la sintaxis de Go con lenguajes como Java que usan getters. En Go se accede directamente al método: `t.Year()`.",
+      "Path.Combine no impide '../' en filename. Con '../../../etc/passwd' se accede fuera del directorio. GetFileName() quita las barras y GetFullPath()+StartsWith() validan.",
   },
   {
     id: 14,
-    language: "Java",
-    task: "Ordenar un arreglo de números `int[] numeros` de forma ascendente.",
-    options: {
-      A: "Arrays.sort(numeros);",
-      B: "numeros.sort();",
-      C: "Arrays.parallelSort(numeros);",
-      D: "List<Integer> lista = Arrays.stream(numeros).boxed().sorted().toList();",
-    },
-    answer: "B",
-    explanation:
-      "Los arrays primitivos (int[]) en Java no tienen métodos de instancia como `.sort()`. Esta sintaxis es típica de C# o JavaScript. En Java se usan métodos estáticos de la clase `Arrays`.",
-  },
-  {
-    id: 15,
     language: "Go",
-    task: "Obtener cantidad de elementos en el mapa `m`.",
+    vulnerability: "Path Traversal",
+    task: "Servir archivos estáticos.",
     options: {
-      A: "m.len()",
-      B: "len(m.keys())",
-      C: "count := 0\nfor range m { count++ }",
-      D: "len(m)",
+      A: `file := r.URL.Path[len("/files/"):]\nhttp.ServeFile(w, r, "./static/" + file)`,
+      B: `fs := http.FileServer(http.Dir("./static"))\nhttp.Handle("/files/", http.StripPrefix("/files/", fs))`,
+      C: `file := filepath.Base(r.URL.Path[len("/files/"):])\nhttp.ServeFile(w, r, filepath.Join("./static", file))`,
+      D: `clean := filepath.Clean(r.URL.Path[len("/files/"):])\nfull := filepath.Join("./static", clean)\nif !strings.HasPrefix(full, "static") { return }\nhttp.ServeFile(w, r, full)`,
     },
     answer: "A",
     explanation:
-      "Los maps en Go no tienen métodos adjuntos. Se usa la función global `len()`.",
+      "Concatena el path del usuario sin validar. Con /files/../../../etc/passwd lee cualquier archivo. filepath.Base() y http.FileServer sanitizan los paths.",
+  },
+
+  // ── Hardcoded Credentials ──────────────────────────────
+  {
+    id: 15,
+    language: "Python",
+    vulnerability: "Hardcoded Credentials",
+    task: "Conectarse a la base de datos.",
+    options: {
+      A: `conn = psycopg2.connect(host="db.prod", password="S3cret!")`,
+      B: `conn = psycopg2.connect(os.environ["DATABASE_URL"])`,
+      C: `conn = psycopg2.connect(password=config("DB_PASS"))`,
+      D: `secrets = json.loads(Path("/run/secrets/db").read_text())\nconn = psycopg2.connect(**secrets)`,
+    },
+    answer: "A",
+    explanation:
+      "La contraseña está escrita en el código. Si el repo se hace público, el atacante accede a la DB de producción. Siempre usar variables de entorno o secret managers.",
   },
   {
     id: 16,
-    language: "Java",
-    task: 'Saber si `texto` contiene la palabra "hola".',
+    language: "JavaScript",
+    vulnerability: "Hardcoded Credentials",
+    task: "Configurar conexión a API externa.",
     options: {
-      A: 'if (texto.contains("hola")) { ... }',
-      B: 'if (texto.indexOf("hola") != -1) { ... }',
-      C: 'if (texto.matches(".*hola.*")) { ... }',
-      D: 'if (texto.includes("hola")) { ... }',
+      A: `const api = axios.create({\n  headers: { Authorization: 'Bearer sk-abc123secret' }\n});`,
+      B: `const api = axios.create({\n  headers: { Authorization: 'Bearer ' + process.env.API_KEY }\n});`,
+      C: `const token = await getSecret('API_KEY');\nconst api = axios.create({\n  headers: { Authorization: 'Bearer ' + token }\n});`,
+      D: `const api = axios.create({\n  headers: { Authorization: 'Bearer ' + process.env.API_KEY }\n});`,
     },
-    answer: "D",
+    answer: "A",
     explanation:
-      "El método `.includes()` no existe en la clase String de Java. Pertenece a JavaScript. En Java se usa `.contains()`.",
+      "El API key está en el código fuente. Cualquiera con acceso al repo puede verlo y usarlo. Los secretos deben estar en variables de entorno o un vault.",
   },
+
+  // ── Deserialización Insegura ───────────────────────────
   {
     id: 17,
     language: "Python",
-    task: "Verificar si `valor` es de tipo `int`.",
+    vulnerability: "Deserialización Insegura",
+    task: "Cargar datos del cliente.",
     options: {
-      A: "if type(valor) == int:\n    pass",
-      B: "if isinstance(valor, int):\n    pass",
-      C: 'if valor.isInstance("int"):\n    pass',
-      D: "if isinstance(valor, (int, float)):\n    pass",
+      A: `config = json.loads(data)`,
+      B: `config = pickle.loads(data)`,
+      C: `config = yaml.safe_load(data)`,
+      D: `config = tomllib.loads(data)`,
     },
-    answer: "C",
+    answer: "B",
     explanation:
-      "Los objetos en Python no tienen un método `.isInstance()`. La función correcta es la built-in `isinstance()`.",
+      "pickle.loads() ejecuta código al deserializar. Un atacante crea un payload que ejecuta os.system('rm -rf /'). JSON, YAML safe_load y TOML solo parsean datos.",
   },
   {
     id: 18,
-    language: "PHP",
-    task: "Convertir el array `$palabras` en un string separado por comas.",
+    language: "Java",
+    vulnerability: "Deserialización Insegura",
+    task: "Recibir datos del cliente.",
     options: {
-      A: '$texto = implode(", ", $palabras);',
-      B: '$texto = $palabras.join(", ");',
-      C: '$texto = join(", ", $palabras);',
-      D: '$texto = "";\nforeach ($palabras as $p) { $texto .= $p . ", "; }',
+      A: `UserPrefs p = new ObjectMapper()\n  .readValue(json, UserPrefs.class);`,
+      B: `ObjectInputStream ois = new ObjectInputStream(input);\nUserPrefs p = (UserPrefs) ois.readObject();`,
+      C: `UserPrefs p = new Gson().fromJson(json, UserPrefs.class);`,
+      D: `UserPrefs p = JsonParser.parseString(json).getAsJsonObject();`,
     },
     answer: "B",
     explanation:
-      "PHP no soporta la sintaxis de método sobre arrays (`$array.join`). PHP trata los arrays y strings con funciones globales (`implode`), no con métodos de instancia como JavaScript.",
+      "ObjectInputStream.readObject() con datos no confiables permite ejecución remota de código. Existen 'gadget chains' que el atacante explota. JSON (Jackson, Gson) es seguro.",
   },
+
+  // ── SSRF ───────────────────────────────────────────────
   {
     id: 19,
-    language: "PHP",
-    task: "Función que suma dos números y devuelve entero.",
+    language: "TypeScript",
+    vulnerability: "SSRF",
+    task: "Proxy para obtener datos de una URL.",
     options: {
-      A: "function sumar(int $a, int $b) -> int { return $a + $b; }",
-      B: "function sumar($a, $b) { return $a + $b; }",
-      C: "function sumar(int $a, int $b): int { return $a + $b; }",
-      D: "function sumar($a, $b): int { return $a + $b; }",
+      A: `const resp = await fetch(req.query.url as string);\nres.send(await resp.text());`,
+      B: `const url = new URL(req.query.url as string);\nif (!ALLOWED.includes(url.hostname)) return res.status(403).end();\nres.send(await (await fetch(url)).text());`,
+      C: `const urls: Record<string,string> = {\n  weather: 'https://api.weather.com/data'\n};\nconst url = urls[req.params.source];\nif (!url) return res.status(404).end();\nres.send(await (await fetch(url)).text());`,
+      D: `const url = new URL(req.query.url as string);\nif (url.protocol !== 'https:') return res.status(400).end();\nif (!ALLOWED.includes(url.hostname)) return res.status(403).end();\nres.send(await (await fetch(url)).text());`,
     },
     answer: "A",
     explanation:
-      "La sintaxis de tipo de retorno en PHP es `: int` después de los paréntesis y antes de la llave. La sintaxis `-> int` es propia de lenguajes como Rust o Kotlin, pero no es la sintaxis estándar de PHP moderno.",
+      "Hace fetch a cualquier URL sin restricción. Un atacante pide http://169.254.169.254/ (metadata AWS) o http://localhost:6379 (Redis) para acceder a servicios internos.",
   },
+
+  // ── CSRF ───────────────────────────────────────────────
   {
     id: 20,
     language: "C#",
-    task: "Limpiar espacios en blanco al inicio y fin de la variable `input`.",
+    vulnerability: "CSRF",
+    task: "Endpoint para transferir fondos.",
     options: {
-      A: "input = input.Trim();",
-      B: "input = input.TrimStart().TrimEnd();",
-      C: "input = input.Trim(' ');",
-      D: "input = input.strip();",
-    },
-    answer: "D",
-    explanation:
-      "El método `.strip()` no existe en C#. Pertenece a Python o Java. En C# el método correcto es `.Trim()`.",
-  },
-  {
-    id: 21,
-    language: "C#",
-    task: "Redondear `valor` a 2 decimales.",
-    options: {
-      A: "Math.Round(valor, 2);",
-      B: "Math.Round(valor, 2, MidpointRounding.AwayFromZero);",
-      C: "valor.Round(2);",
-      D: 'double.Parse(valor.ToString("0.00"));',
-    },
-    answer: "C",
-    explanation:
-      "El tipo `double` (primitivo) en C# no tiene un método de instancia `.Round()`. Se debe usar el método estático `Math.Round()`.",
-  },
-  {
-    id: 22,
-    language: "TypeScript",
-    task: "Filtrar números pares del array `nums`.",
-    options: {
-      A: "nums.filter(n => n % 2 === 0)",
-      B: "nums.where(n => n % 2 === 0)",
-      C: "nums.filter(function(n) { return n % 2 === 0 })",
-      D: "nums = nums.reduce((acc, n) => n % 2 === 0 ? [...acc, n] : acc, [] as number[])",
-    },
-    answer: "B",
-    explanation:
-      "Los arrays en JS/TS no tienen un método `.where()`. Este método es típico de C# (LINQ). El estándar en JS es `.filter()`.",
-  },
-  {
-    id: 23,
-    language: "C#",
-    task: "Comprobar si `obj` es de tipo `Cliente`.",
-    options: {
-      A: "if (obj instanceof Cliente) { ... }",
-      B: "if (obj.GetType() == typeof(Cliente)) { ... }",
-      C: "if (obj is Cliente) { ... }",
-      D: "if (obj is Cliente c) { ... }",
+      A: `[HttpPost]\npublic IActionResult Transfer(string to, decimal amount) {\n  _bank.Transfer(User.Id, to, amount);\n  return Ok();\n}`,
+      B: `[HttpPost]\n[ValidateAntiForgeryToken]\npublic IActionResult Transfer(TransferRequest req) {\n  _bank.Transfer(User.Id, req.To, req.Amount);\n  return Ok();\n}`,
+      C: `[HttpPost, Authorize, ValidateAntiForgeryToken]\npublic IActionResult Transfer([FromBody] TransferRequest req) {\n  _bank.Transfer(User.Id, req.To, req.Amount);\n  return Ok();\n}`,
+      D: `[HttpPost, Authorize]\npublic IActionResult Transfer([FromBody] TransferRequest req) {\n  if (Request.Headers["X-CSRF"] != Session.GetString("csrf"))\n    return Forbid();\n  _bank.Transfer(User.Id, req.To, req.Amount);\n  return Ok();\n}`,
     },
     answer: "A",
-    explanation: "La palabra clave `instanceof` es de Java. En C# se usa `is`.",
+    explanation:
+      "Sin protección CSRF ni [Authorize]. Un sitio malicioso hace que el navegador envíe un POST automático, transfiriendo fondos sin consentimiento. El token anti-forgery lo previene.",
   },
+
+  // ── IDOR ───────────────────────────────────────────────
+  {
+    id: 21,
+    language: "TypeScript",
+    vulnerability: "IDOR",
+    task: "Obtener datos de un pedido.",
+    options: {
+      A: `const order = await db.orders.findById(req.params.id);\nres.json(order);`,
+      B: `const order = await db.orders.findOne({\n  id: req.params.id, userId: req.user.id\n});\nif (!order) return res.status(404).end();\nres.json(order);`,
+      C: `const order = await db.orders.findOne({\n  id: req.params.id, userId: req.user.id\n});\nif (!order) return res.status(403).end();\nres.json(order);`,
+      D: `// middleware: auth + authorize('order:read')\nconst order = await db.orders.findById(req.params.id);\nres.json(order);`,
+    },
+    answer: "A",
+    explanation:
+      "Busca solo por ID sin autenticación. Cualquiera accede a pedidos ajenos cambiando el número en la URL (/orders/1, /orders/2...). Se debe verificar que pertenezca al usuario.",
+  },
+
+  // ── Broken Access Control ──────────────────────────────
+  {
+    id: 22,
+    language: "Java",
+    vulnerability: "Broken Access Control",
+    task: "Actualizar perfil de usuario.",
+    options: {
+      A: `@PostMapping("/api/users/{id}/profile")\npublic ResponseEntity<?> update(@PathVariable Long id, @RequestBody ProfileDTO dto) {\n  userService.updateProfile(id, dto);\n  return ResponseEntity.ok().build();\n}`,
+      B: `@PostMapping("/api/profile")\npublic ResponseEntity<?> update(@AuthenticationPrincipal User u, @RequestBody ProfileDTO dto) {\n  userService.updateProfile(u.getId(), dto);\n  return ResponseEntity.ok().build();\n}`,
+      C: `@PostMapping("/api/users/{id}/profile")\n@PreAuthorize("#id == authentication.principal.id")\npublic ResponseEntity<?> update(@PathVariable Long id, @RequestBody ProfileDTO dto) {\n  userService.updateProfile(id, dto);\n  return ResponseEntity.ok().build();\n}`,
+      D: `@PostMapping("/api/profile")\npublic ResponseEntity<?> update(HttpServletRequest req, @RequestBody ProfileDTO dto) {\n  Long uid = (Long) req.getAttribute("userId");\n  userService.updateProfile(uid, dto);\n  return ResponseEntity.ok().build();\n}`,
+    },
+    answer: "A",
+    explanation:
+      "Toma el ID de la URL sin verificar que sea el usuario autenticado. Un atacante cambia el ID para modificar el perfil de otro. Las demás usan el ID del usuario autenticado.",
+  },
+
+  // ── Prototype Pollution ────────────────────────────────
+  {
+    id: 23,
+    language: "JavaScript",
+    vulnerability: "Prototype Pollution",
+    task: "Combinar config del usuario con defaults.",
+    options: {
+      A: `function merge(t, s) {\n  for (let k in s) {\n    if (typeof s[k]==='object') t[k]=merge(t[k]||{},s[k]);\n    else t[k]=s[k];\n  }\n  return t;\n}`,
+      B: `const config = { ...defaults, ...userConfig };`,
+      C: `const config = Object.assign({}, defaults, userConfig);`,
+      D: `const config = structuredClone({...defaults,...userConfig});`,
+    },
+    answer: "A",
+    explanation:
+      "El merge recursivo no filtra claves. Con {\"__proto__\":{\"isAdmin\":true}} se contamina el prototipo de Object, afectando TODOS los objetos. Spread y assign no tocan prototipos.",
+  },
+
+  // ── NoSQL Injection ────────────────────────────────────
   {
     id: 24,
-    language: "C#",
-    task: "Validar si la cadena `texto` está vacía o es nula.",
+    language: "JavaScript",
+    vulnerability: "NoSQL Injection",
+    task: "Login con MongoDB.",
     options: {
-      A: "if (string.IsNullOrEmpty(texto)) { ... }",
-      B: 'if (texto == null || texto == "") { ... }',
-      C: "if (string.IsNullOrWhitespace(texto)) { ... }",
-      D: "if (texto.isEmpty()) { ... }",
+      A: `const user = await users.findOne(req.body);`,
+      B: `const user = await users.findOne({ email: String(req.body.email) });`,
+      C: `const { email } = await schema.validateAsync(req.body);\nconst user = await users.findOne({ email });`,
+      D: `if (typeof req.body.email !== 'string') return res.status(400).end();\nconst user = await users.findOne({ email: req.body.email });`,
     },
-    answer: "D",
+    answer: "A",
     explanation:
-      "El método `.isEmpty()` no existe en C#. Esta es una alucinación común donde la IA confunde sintaxis de otros lenguajes como Java. En C# se usa `string.IsNullOrEmpty()` o se verifica `.Length == 0`.",
+      "Pasa req.body directo a findOne(). Un atacante envía {\"email\":{\"$gt\":\"\"}} para que MongoDB devuelva el primer usuario. Se deben validar tipos antes de consultar.",
   },
+
+  // ── Weak Crypto ────────────────────────────────────────
   {
     id: 25,
-    language: "C#",
-    task: "Obtener el último carácter de `palabra`.",
+    language: "Go",
+    vulnerability: "Criptografía Débil",
+    task: "Hashear una contraseña.",
     options: {
-      A: "char ultimo = palabra[^1];",
-      B: "char ultimo = palabra.Last();",
-      C: "char ultimo = palabra.GetLastChar();",
-      D: "char ultimo = palabra[palabra.Length - 1];",
+      A: `hash := md5.Sum([]byte(password))\nresult := fmt.Sprintf("%x", hash)`,
+      B: `hashed, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)`,
+      C: `salt := make([]byte, 16)\nrand.Read(salt)\nhash := argon2.IDKey([]byte(password), salt, 1, 64*1024, 4, 32)`,
+      D: `salt := make([]byte, 32)\nrand.Read(salt)\nhash, _ := scrypt.Key([]byte(password), salt, 32768, 8, 1, 32)`,
     },
-    answer: "C",
+    answer: "A",
     explanation:
-      "La clase `string` en C# no tiene un método `GetLastChar()`. Se debe usar índices o LINQ (`Last()`).",
+      "MD5 es rápido y está roto. Con GPUs se prueban miles de millones por segundo. bcrypt, argon2 y scrypt son lentos a propósito, haciendo la fuerza bruta inviable.",
   },
   {
     id: 26,
-    language: "Go",
-    task: "Unir múltiples strings de un slice `partes`.",
+    language: "Python",
+    vulnerability: "Criptografía Débil",
+    task: "Hashear contraseña para almacenar.",
     options: {
-      A: 'import "strings"\nresultado := strings.Join(partes, "")',
-      B: "resultado := strings.concat(partes)",
-      C: "var sb strings.Builder\nfor _, p := range partes {\n    sb.WriteString(p)\n}\nresultado := sb.String()",
-      D: 'resultado := ""\nfor _, p := range partes {\n    resultado += p\n}',
+      A: `hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt())`,
+      B: `hashed = hashlib.sha256(password.encode()).hexdigest()`,
+      C: `ph = PasswordHasher()\nhashed = ph.hash(password)`,
+      D: `hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12))`,
     },
     answer: "B",
     explanation:
-      "El paquete `strings` de Go no tiene una función `concat`. La forma idiomática es usar `strings.Join` o `strings.Builder`.",
+      "SHA-256 es rápido y sin salt. Se pueden usar rainbow tables para revertirlo. bcrypt y argon2 incluyen salt automático y son lentos a propósito.",
   },
+
+  // ── JWT Inseguro ───────────────────────────────────────
   {
     id: 27,
-    language: "TypeScript",
-    task: "Declarar constante numérica.",
+    language: "JavaScript",
+    vulnerability: "JWT Inseguro",
+    task: "Verificar token JWT del usuario.",
     options: {
-      A: "final PI: number = 3.14;",
-      B: "const PI = 3.14;",
-      C: "const PI: number = 3.14;",
-      D: "let PI: number = 3.14;",
+      A: `const decoded = jwt.decode(token);\nif (decoded) { req.user = decoded; next(); }`,
+      B: `req.user = jwt.verify(token, process.env.JWT_SECRET);\nnext();`,
+      C: `req.user = jwt.verify(token, process.env.JWT_SECRET, {\n  algorithms: ['HS256']\n});\nnext();`,
+      D: `req.user = jwt.verify(token, publicKey, {\n  algorithms: ['RS256'], issuer: 'auth.myapp.com'\n});\nnext();`,
     },
     answer: "A",
     explanation:
-      "La palabra clave `final` no existe en TypeScript (es de Java/C++). Se usa `const`.",
+      "jwt.decode() NO verifica la firma. Un atacante crea un JWT falso con {role:'admin'} y es aceptado. jwt.verify() valida la firma criptográfica.",
   },
+
+  // ── Session Fixation ───────────────────────────────────
   {
     id: 28,
-    language: "Java",
-    task: "Parsear la cadena `s` a un tipo primitivo `int`.",
+    language: "PHP",
+    vulnerability: "Session Fixation",
+    task: "Iniciar sesión de usuario.",
     options: {
-      A: "int numero = new Integer(s).intValue(); // Deprecated pero válido",
-      B: "int numero = Integer.valueOf(s); // Autounboxing",
-      C: "int numero = Integer.parseInt(s);",
-      D: "int numero = Integer.parse(s);",
+      A: `session_start();\n$_SESSION['user_id'] = $user->id;`,
+      B: `session_start();\nsession_regenerate_id(true);\n$_SESSION['user_id'] = $user->id;`,
+      C: `ini_set('session.cookie_httponly', 1);\nsession_start();\nsession_regenerate_id(true);\n$_SESSION['user_id'] = $user->id;`,
+      D: `session_start();\nsession_regenerate_id(true);\n$_SESSION['user_id'] = $user->id;\n$_SESSION['ip'] = $_SERVER['REMOTE_ADDR'];`,
     },
-    answer: "D",
+    answer: "A",
     explanation:
-      "No existe el método estático `Integer.parse()`. El nombre correcto es `Integer.parseInt()`. Es un error muy común de autocompletado o alucinación de nombres de métodos.",
+      "No regenera el session ID tras login. Un atacante fija un ID conocido (vía enlace) y cuando la víctima inicia sesión, hereda su sesión. session_regenerate_id() crea uno nuevo.",
   },
+
+  // ── Datos Sensibles ────────────────────────────────────
   {
     id: 29,
-    language: "Python",
-    task: "Imprimir cada línea del archivo `datos.txt`.",
+    language: "JavaScript",
+    vulnerability: "Exposición de Datos Sensibles",
+    task: "Almacenar token de autenticación.",
     options: {
-      A: "with open('datos.txt', 'r') as f:\n    for linea in f:\n        print(linea)",
-      B: "f = open('datos.txt', 'r')\nlineas = f.readlines()\nfor linea in lineas:\n    print(linea)\nf.close()",
-      C: "with open('datos.txt', 'r') as f:\n    lineas = f.load()\n    print(lineas)",
-      D: "import pathlib\ncontenido = pathlib.Path('datos.txt').read_text()\nprint(contenido)",
+      A: `localStorage.setItem('token', authToken);`,
+      B: `// Servidor: Set-Cookie: token=xxx; HttpOnly; Secure`,
+      C: `// Cookie HttpOnly — no accesible desde JavaScript`,
+      D: `sessionStorage.setItem('token', authToken);`,
     },
-    answer: "C",
+    answer: "A",
     explanation:
-      "Los objetos archivo en Python no tienen un método `.load()`. Este método suele asociarse a la librería `json` o `pickle`. Para leer texto plano se usa `.read()` o iterar el archivo.",
+      "localStorage es legible por cualquier script JS. Si hay XSS, el atacante lee el token. Una cookie HttpOnly no es accesible desde JavaScript.",
   },
+
+  // ── Open Redirect ──────────────────────────────────────
   {
     id: 30,
-    language: "PHP",
-    task: "Comprobar si `$dato` es un array.",
+    language: "C#",
+    vulnerability: "Open Redirect",
+    task: "Redirigir tras login.",
     options: {
-      A: "if (is_array($dato)) { ... }",
-      B: "if ($dato instanceof Array) { ... }",
-      C: "if (gettype($dato) === 'array') { ... }",
-      D: "if (is_iterable($dato)) { ... }",
+      A: `return Redirect(model.ReturnUrl);`,
+      B: `if (Url.IsLocalUrl(model.ReturnUrl))\n  return Redirect(model.ReturnUrl);\nreturn RedirectToAction("Index", "Home");`,
+      C: `return LocalRedirect(model.ReturnUrl ?? "/");`,
+      D: `var ok = new[]{ "/dashboard", "/profile" };\nreturn Redirect(ok.Contains(model.ReturnUrl) ? model.ReturnUrl : "/");`,
     },
-    answer: "B",
+    answer: "A",
     explanation:
-      "No se puede usar `instanceof Array` en PHP porque `Array` no es una clase (es un tipo primitivo). La forma correcta es la función `is_array()`.",
+      "Redirige a cualquier URL. Un atacante crea /login?ReturnUrl=https://evil.com que tras login envía al usuario a un sitio de phishing. Se debe validar que sea URL local.",
   },
+
+  // ── Mass Assignment ────────────────────────────────────
   {
     id: 31,
-    language: "C#",
-    task: "Usar un StreamReader para leer archivo.",
+    language: "Python",
+    vulnerability: "Mass Assignment",
+    task: "Actualizar perfil del usuario.",
     options: {
-      A: 'use (var sr = new StreamReader("file.txt")) { ... }',
-      B: 'using var sr = new StreamReader("file.txt");',
-      C: 'try { var sr = new StreamReader("file.txt"); ... } finally { sr.Dispose(); }',
-      D: 'using (var sr = new StreamReader("file.txt")) { ... }',
+      A: `for key, val in request.json.items():\n  setattr(user, key, val)\ndb.session.commit()`,
+      B: `allowed = ['name', 'bio']\nfor k,v in request.json.items():\n  if k in allowed: setattr(user, k, v)\ndb.session.commit()`,
+      C: `user.name = request.json.get('name', user.name)\nuser.bio = request.json.get('bio', user.bio)\ndb.session.commit()`,
+      D: `data = ProfileSchema().load(request.json)\nuser.name = data.get('name', user.name)\ndb.session.commit()`,
     },
     answer: "A",
     explanation:
-      "La palabra clave para manejo de recursos en C# es `using`. `use` es de Visual Basic .NET o Rust.",
+      "Asigna TODOS los campos enviados sin filtrar. Un atacante envía {\"is_admin\":true} para escalar privilegios. Se debe usar allowlist de campos permitidos.",
   },
+
+  // ── Race Condition ─────────────────────────────────────
   {
     id: 32,
-    language: "PHP",
-    task: "Obtener la cantidad de caracteres de la variable `$nombre`.",
+    language: "Go",
+    vulnerability: "Race Condition",
+    task: "Contador de visitas web.",
     options: {
-      A: "$longitud = strlen($nombre);",
-      B: "$longitud = mb_strlen($nombre);",
-      C: "$longitud = count(str_split($nombre));",
-      D: "$longitud = $nombre.length;",
-    },
-    answer: "D",
-    explanation:
-      "PHP no usa sintaxis de objeto para acceder a la longitud de strings (como `.length` en Java/JS). PHP utiliza funciones globales como `strlen()`.",
-  },
-  {
-    id: 33,
-    language: "Python",
-    task: "Obtener el elemento en índice 5 de `lista` o None si no existe.",
-    options: {
-      A: "try:\n    valor = lista[5]\nexcept IndexError:\n    valor = None",
-      B: "valor = lista[5] if len(lista) > 5 else None",
-      C: "valor = lista.get(5)",
-      D: "valor = lista[5:6] or [None]\nvalor = valor[0]",
-    },
-    answer: "C",
-    explanation:
-      "Las listas (`list`) en Python no tienen un método `.get()`. Este método es exclusivo de los diccionarios (`dict`).",
-  },
-  {
-    id: 34,
-    language: "C#",
-    task: "Iterar sobre un diccionario `edades` e imprimir claves.",
-    options: {
-      A: "foreach (var kvp in edades) { Console.WriteLine(kvp.Key); }",
-      B: "edades.ForEach(k => Console.WriteLine(k.Key));",
-      C: "foreach (var key in edades.Keys) { Console.WriteLine(key); }",
-      D: "var enumerator = edades.GetEnumerator();\nwhile (enumerator.MoveNext()) { ... }",
-    },
-    answer: "B",
-    explanation:
-      "La clase `Dictionary` en C# no tiene un método `.ForEach()`. Este método sí existe en la clase `List`, y la IA suele alucinar que existe también para diccionarios.",
-  },
-  {
-    id: 35,
-    language: "Java",
-    task: "Obtener el primer item de `lista` de forma segura.",
-    options: {
-      A: "lista.first();",
-      B: "lista.stream().findFirst().get();",
-      C: "lista.isEmpty() ? null : lista.get(0);",
-      D: "lista.get(0);",
+      A: `var counter int\nfunc handler(w http.ResponseWriter, r *http.Request) {\n  counter++\n  fmt.Fprintf(w, "Visitas: %d", counter)\n}`,
+      B: `var (counter int; mu sync.Mutex)\nfunc handler(w http.ResponseWriter, r *http.Request) {\n  mu.Lock(); counter++; mu.Unlock()\n  fmt.Fprintf(w, "Visitas: %d", counter)\n}`,
+      C: `var counter atomic.Int64\nfunc handler(w http.ResponseWriter, r *http.Request) {\n  fmt.Fprintf(w, "Visitas: %d", counter.Add(1))\n}`,
+      D: `var counter int64\nfunc handler(w http.ResponseWriter, r *http.Request) {\n  fmt.Fprintf(w, "Visitas: %d", atomic.AddInt64(&counter, 1))\n}`,
     },
     answer: "A",
     explanation:
-      "La interfaz `List` en Java no tiene un método `first()`. Se usa `get(0)`.",
+      "Varias goroutines leen y escriben counter a la vez (data race). Dos requests leen el mismo valor y ambos escriben +1, perdiendo un incremento. Mutex y atomic dan acceso exclusivo.",
   },
+
+  // ── Type Juggling ──────────────────────────────────────
+  {
+    id: 33,
+    language: "PHP",
+    vulnerability: "Type Juggling",
+    task: "Verificar código de acceso.",
+    options: {
+      A: `if ($_POST['code'] == $secret) grant_access();`,
+      B: `if ($_POST['code'] === $secret) grant_access();`,
+      C: `if (hash_equals($secret, $_POST['code'])) grant_access();`,
+      D: `if ($_POST['code'] !== null && $_POST['code'] === $secret)\n  grant_access();`,
+    },
+    answer: "A",
+    explanation:
+      "== en PHP hace comparación loose. Si $secret es '0e12345' (hash MD5), PHP lo ve como 0. Enviar '0' pasa la comparación. === compara tipo y valor estrictamente.",
+  },
+
+  // ── CORS Inseguro ──────────────────────────────────────
+  {
+    id: 34,
+    language: "JavaScript",
+    vulnerability: "CORS Inseguro",
+    task: "Configurar CORS para API.",
+    options: {
+      A: `app.use(cors({ origin: '*', credentials: true }));`,
+      B: `app.use(cors({ origin: 'https://app.example.com', credentials: true }));`,
+      C: `app.use(cors({\n  origin: ['https://app.example.com'],\n  methods: ['GET','POST'], credentials: true\n}));`,
+      D: `app.use(cors({\n  origin: (o,cb) => ALLOWED.includes(o) ? cb(null,true) : cb(new Error('No')),\n  credentials: true\n}));`,
+    },
+    answer: "A",
+    explanation:
+      "origin:'*' con credentials:true permite que CUALQUIER sitio haga requests autenticados. Un atacante crea una página que roba datos del usuario con sus cookies.",
+  },
+
+  // ── File Upload ────────────────────────────────────────
+  {
+    id: 35,
+    language: "PHP",
+    vulnerability: "File Upload sin Validación",
+    task: "Subir imagen de perfil.",
+    options: {
+      A: `move_uploaded_file(\n  $_FILES["img"]["tmp_name"],\n  "uploads/" . $_FILES["img"]["name"]);`,
+      B: `$mime = mime_content_type($_FILES["img"]["tmp_name"]);\nif (!in_array($mime, ['image/jpeg','image/png'])) die("No");\n$n = bin2hex(random_bytes(16)).'.jpg';\nmove_uploaded_file($_FILES["img"]["tmp_name"], "uploads/".$n);`,
+      C: `$ext = strtolower(pathinfo($_FILES["img"]["name"], PATHINFO_EXTENSION));\nif (!in_array($ext, ['jpg','png'])) die("No");\nmove_uploaded_file($_FILES["img"]["tmp_name"], "uploads/".uniqid().".".$ext);`,
+      D: `$im = new Imagick($_FILES["img"]["tmp_name"]);\n$im->thumbnailImage(200,200);\n$im->writeImage("uploads/".uniqid().".jpg");`,
+    },
+    answer: "A",
+    explanation:
+      "Usa el nombre original sin validar tipo ni extensión. Un atacante sube 'shell.php' y lo ejecuta en uploads/shell.php. Se debe validar MIME y generar nombre aleatorio.",
+  },
+
+  // ── XXE ────────────────────────────────────────────────
   {
     id: 36,
     language: "Java",
-    task: 'Crear una lista fija con los elementos "a" y "b".',
+    vulnerability: "XXE",
+    task: "Parsear XML del usuario.",
     options: {
-      A: 'List<String> lista = Collections.unmodifiableList(Arrays.asList("a", "b"));',
-      B: 'List<String> lista = List.of("a", "b");',
-      C: 'List<String> lista = ImmutableList.of("a", "b");',
-      D: 'List<String> lista = new List<>("a", "b");',
-    },
-    answer: "D",
-    explanation:
-      "`List` es una interfaz en Java, por lo que no puede ser instanciada directamente con `new List<>()`. Se debe usar una implementación concreta como `new ArrayList<>()`.",
-  },
-  {
-    id: 37,
-    language: "Go",
-    task: "Imprimir valor y tipo de la variable `x`.",
-    options: {
-      A: 'print(x, " is ", typeof(x))',
-      B: "fmt.Println(x, reflect.TypeOf(x))",
-      C: 'fmt.Printf("%v: %T\\n", x, x)',
-      D: 'fmt.Sprintf("%v - %T", x)',
+      A: `DocumentBuilderFactory.newInstance()\n  .newDocumentBuilder()\n  .parse(new InputSource(new StringReader(xml)));`,
+      B: `DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();\nf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);\nf.newDocumentBuilder().parse(new InputSource(new StringReader(xml)));`,
+      C: `SAXParserFactory f = SAXParserFactory.newInstance();\nf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);\nf.newSAXParser();`,
+      D: `XMLInputFactory f = XMLInputFactory.newInstance();\nf.setProperty(XMLInputFactory.SUPPORT_DTD, false);\nf.createXMLStreamReader(new StringReader(xml));`,
     },
     answer: "A",
     explanation:
-      "`typeof` no existe en Go (es de JavaScript). Además, la función `print` es muy básica y no formatea como se muestra. Se debe usar el paquete `fmt` y `reflect`.",
+      "Parser con config por defecto permite entidades externas. Un atacante incluye <!ENTITY xxe SYSTEM \"file:///etc/passwd\"> para leer archivos del servidor. Se deben deshabilitar DTDs.",
   },
+
+  // ── SSTI ───────────────────────────────────────────────
+  {
+    id: 37,
+    language: "Python",
+    vulnerability: "SSTI",
+    task: "Email de bienvenida personalizado.",
+    options: {
+      A: `template = f"<h1>Hola {name}</h1>"\nreturn render_template_string(template)`,
+      B: `t = env.from_string("<h1>Hola {{ name }}</h1>")\nreturn t.render(name=name)`,
+      C: `return render_template("welcome.html", name=name)`,
+      D: `return f"<h1>Hola {escape(name)}</h1>"`,
+    },
+    answer: "A",
+    explanation:
+      "Interpola name ANTES de pasarlo al motor de templates. Si name es {{config.SECRET_KEY}}, Jinja2 lo ejecuta y revela el secreto. Se debe pasar name como variable, no en el string.",
+  },
+
+  // ── Timing Attack ──────────────────────────────────────
   {
     id: 38,
     language: "TypeScript",
-    task: "Pausar ejecución por 1 segundo en función async.",
+    vulnerability: "Timing Attack",
+    task: "Verificar un API key.",
     options: {
-      A: "await new Promise(r => setTimeout(r, 1000));",
-      B: "await sleep(1000);",
-      C: "setTimeout(() => {}, 1000);",
-      D: "await delay(1000);",
-    },
-    answer: "B",
-    explanation:
-      "No existe una función global `sleep()` en JavaScript/TypeScript estándar. Esta es una alucinación común donde la IA asume que existe una función de conveniencia que no está disponible. Se debe construir una `Promise` con `setTimeout`.",
-  },
-  {
-    id: 39,
-    language: "Python",
-    task: "Quitar elementos duplicados de `lista`.",
-    options: {
-      A: "lista.removeDuplicates()",
-      B: "list(set(lista))",
-      C: "import itertools\nlist(k for k, _ in itertools.groupby(sorted(lista)))",
-      D: "list(dict.fromkeys(lista))",
+      A: `return provided === process.env.API_KEY;`,
+      B: `const a = Buffer.from(process.env.API_KEY!);\nconst b = Buffer.from(provided);\nif (a.length !== b.length) return false;\nreturn timingSafeEqual(a, b);`,
+      C: `const h1 = createHmac('sha256','k').update(provided).digest('hex');\nconst h2 = createHmac('sha256','k').update(process.env.API_KEY!).digest('hex');\nreturn h1 === h2;`,
+      D: `const h = createHash('sha256').update(provided).digest();\nconst e = createHash('sha256').update(process.env.API_KEY!).digest();\nreturn timingSafeEqual(h, e);`,
     },
     answer: "A",
     explanation:
-      "Las listas en Python no tienen un método `removeDuplicates()`. Esta funcionalidad requiere conversión a `set` o lógica personalizada.",
+      "=== se detiene en el primer carácter diferente, tardando más cuantos más coincidan. Midiendo tiempos, un atacante deduce el key carácter a carácter. timingSafeEqual tarda siempre igual.",
   },
+
+  // ── Log Injection ──────────────────────────────────────
+  {
+    id: 39,
+    language: "Java",
+    vulnerability: "Log Injection",
+    task: "Registrar login fallido.",
+    options: {
+      A: `logger.info("Login fallido: " + username);`,
+      B: `logger.info("Login fallido: {}", username.replaceAll("[\\n\\r]", "_"));`,
+      C: `logger.info("Login fallido: {}", username.replaceAll("[^a-zA-Z0-9@._-]", ""));`,
+      D: `logger.info("Login fallido: {}", sanitize(username));`,
+    },
+    answer: "A",
+    explanation:
+      "Username va directo al log. Un atacante inyecta 'admin\\nINFO Login exitoso: admin' para falsificar logs y ocultar actividad maliciosa. Se deben eliminar saltos de línea.",
+  },
+
+  // ── Integer Overflow ───────────────────────────────────
   {
     id: 40,
-    language: "Java",
-    task: "Pasar `texto` a minúsculas.",
+    language: "Go",
+    vulnerability: "Integer Overflow",
+    task: "Calcular precio total de pedido.",
     options: {
-      A: "texto.toLowerCase(Locale.ROOT);",
-      B: "Strings.lower(texto);",
-      C: "texto.toLowerCase();",
-      D: "texto.toLower();",
+      A: `func total(qty int32, price int32) int32 {\n  return qty * price\n}`,
+      B: `func total(qty, price int64) (int64, error) {\n  t := qty * price\n  if qty != 0 && t/qty != price { return 0, errors.New("overflow") }\n  return t, nil\n}`,
+      C: `func total(qty, price int64) *big.Int {\n  return new(big.Int).Mul(big.NewInt(qty), big.NewInt(price))\n}`,
+      D: `func total(qty, price int64) (int64, error) {\n  if qty > 0 && price > math.MaxInt64/qty { return 0, errors.New("overflow") }\n  return qty * price, nil\n}`,
     },
-    answer: "D",
+    answer: "A",
     explanation:
-      "El método correcto es `toLowerCase`. `toLower` no existe en Java. Esta es una alucinación donde la IA confunde la API de Java con la de C# (`ToLower()`).",
+      "Con int32, 100000×50000=5 mil millones excede el máximo (2.147 millones), dando un número negativo. Un atacante paga menos. Las demás detectan o previenen el overflow.",
   },
 ];

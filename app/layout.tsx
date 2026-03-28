@@ -3,8 +3,8 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Alucinaciones de IA — Juego Didáctico",
-  description: "Identifica cuál fragmento de código es una alucinación de IA",
+  title: "CyberCode Challenge — Juego de Ciberseguridad",
+  description: "Identifica cuál fragmento de código tiene la vulnerabilidad de seguridad",
 };
 
 export default function RootLayout({

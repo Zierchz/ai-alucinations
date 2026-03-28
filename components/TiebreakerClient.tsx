@@ -37,7 +37,7 @@ export default function TiebreakerClient({
     timeout?: boolean;
   } | null>(null);
   const [roundResults, setRoundResults] = useState<RoundResult[]>([]);
-  const [timeLeft, setTimeLeft] = useState(16);
+  const [timeLeft, setTimeLeft] = useState(31);
   const [winner, setWinner] = useState<string | null>(null);
 
   // Each player in the round gets a different question
@@ -49,7 +49,7 @@ export default function TiebreakerClient({
   // Timer
   useEffect(() => {
     if (phase !== "playing" || !!selected) return;
-    setTimeLeft(16);
+    setTimeLeft(31);
     const interval = setInterval(() => {
       setTimeLeft((t) => Math.max(0, t - 1));
     }, 1000);
@@ -136,20 +136,20 @@ export default function TiebreakerClient({
 
   if (phase === "winner" && winner) {
     return (
-      <div className="min-h-screen bg-[#1e1e1e] flex flex-col items-center justify-center p-8">
+      <div className="min-h-screen bg-[#0d1117] flex flex-col items-center justify-center p-8">
         <div className="text-center max-w-md animate-fade-in">
           <div className="mb-4 flex justify-center animate-bounce">
-            <Trophy size={72} className="text-[#dcdcaa]" />
+            <Trophy size={72} className="text-[#f0883e]" />
           </div>
-          <h1 className="text-4xl font-bold font-mono text-[#dcdcaa] mb-2">
+          <h1 className="text-4xl font-bold font-mono text-[#f0883e] mb-2">
             ¡Ganador del desempate!
           </h1>
-          <p className="text-[#4ec9b0] font-mono text-2xl font-bold mb-8">
+          <p className="text-[#ff7b72] font-mono text-2xl font-bold mb-8">
             {winner}
           </p>
           <button
             onClick={() => onDone(winner)}
-            className="px-8 py-3 bg-linear-to-r from-[#007acc] to-[#4ec9b0] text-white font-bold font-mono rounded-xl hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer"
+            className="px-8 py-3 bg-linear-to-r from-[#f0883e] to-[#ff7b72] text-white font-bold font-mono rounded-xl hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer"
           >
             Ver Resultados Finales
           </button>
@@ -159,11 +159,11 @@ export default function TiebreakerClient({
   }
 
   return (
-    <div className="min-h-screen bg-[#1e1e1e] p-4 md:p-8">
+    <div className="min-h-screen bg-[#0d1117] p-4 md:p-8">
       {/* Tiebreaker header */}
       <div className="max-w-4xl mx-auto mb-6">
-        <div className="flex items-center justify-between bg-[#252526] border border-[#f44747]/40 rounded-xl px-5 py-3">
-          <div className="flex items-center gap-2 font-mono text-[#f44747] font-bold">
+        <div className="flex items-center justify-between bg-[#161b22] border border-[#f85149]/40 rounded-xl px-5 py-3">
+          <div className="flex items-center gap-2 font-mono text-[#f85149] font-bold">
             <Swords size={18} />
             <span>Muerte Súbita</span>
           </div>
@@ -177,18 +177,18 @@ export default function TiebreakerClient({
                 >
                   {result ? (
                     result.correct ? (
-                      <CheckCircle2 size={14} className="text-[#4ec9b0]" />
+                      <CheckCircle2 size={14} className="text-[#3fb950]" />
                     ) : (
-                      <XCircle size={14} className="text-[#f44747]" />
+                      <XCircle size={14} className="text-[#f85149]" />
                     )
                   ) : (
-                    <span className="w-3.5 h-3.5 rounded-full border border-[#888] inline-block" />
+                    <span className="w-3.5 h-3.5 rounded-full border border-[#8b949e] inline-block" />
                   )}
                   <span
                     className={
                       name === currentPlayer && phase === "playing"
                         ? "text-white font-bold"
-                        : "text-[#888]"
+                        : "text-[#8b949e]"
                     }
                   >
                     {name}

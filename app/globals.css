@@ -1,16 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #1e1e1e;
-  --surface: #252526;
-  --border: #007acc;
-  --teal: #4ec9b0;
-  --red: #ff6b6b;
-  --orange: #ce9178;
-  --text: #d4d4d4;
-  --keyword: #569cd6;
-  --func: #dcdcaa;
-  --number: #b5cea8;
+  --bg: #0d1117;
+  --surface: #161b22;
+  --border: #30363d;
+  --accent: #f0883e;
+  --red: #f85149;
+  --orange: #ff7b72;
+  --text: #c9d1d9;
+  --keyword: #ff7b72;
+  --func: #d2a8ff;
+  --number: #79c0ff;
+  --string-color: #a5d6ff;
 }
 
 * {
@@ -26,8 +27,8 @@ body {
 
 .code-keyword { color: var(--keyword); font-weight: bold; }
 .code-func { color: var(--func); font-weight: bold; }
-.code-operator { color: var(--orange); font-weight: bold; }
-.code-string { color: var(--orange); }
+.code-operator { color: var(--accent); font-weight: bold; }
+.code-string { color: var(--string-color); }
 .code-number { color: var(--number); font-weight: bold; }
 
 @keyframes fadeIn {

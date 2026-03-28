@@ -59,7 +59,7 @@ export default function GameClient({ questions }: Props) {
     timeout?: boolean;
   } | null>(null);
 
-  const [timeLeft, setTimeLeft] = useState(16);
+  const [timeLeft, setTimeLeft] = useState(31);
   const [isPending, startTransition] = useTransition();
 
   // Tiebreaker state
@@ -69,7 +69,7 @@ export default function GameClient({ questions }: Props) {
   // Timer countdown display
   useEffect(() => {
     if (phase !== "playing" || !!selected) return;
-    setTimeLeft(16);
+    setTimeLeft(31);
     const interval = setInterval(() => {
       setTimeLeft((t) => Math.max(0, t - 1));
     }, 1000);
@@ -142,7 +142,7 @@ export default function GameClient({ questions }: Props) {
     setCurrentPlayerIdx(nextPlayerIdx);
     setSelected("");
     setRevealData(null);
-    setTimeLeft(16);
+    setTimeLeft(31);
     setPhase("playing");
   }
 
@@ -214,7 +214,7 @@ export default function GameClient({ questions }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-[#1e1e1e] p-4 md:p-8">
+    <div className="min-h-screen bg-[#0d1117] p-4 md:p-8">
       <Scoreboard
         players={players}
         currentPlayerIdx={currentPlayerIdx}
@@ -252,7 +252,7 @@ export default function GameClient({ questions }: Props) {
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className="w-2 h-2 bg-[#4ec9b0] rounded-full animate-bounce"
+                className="w-2 h-2 bg-[#f0883e] rounded-full animate-bounce"
                 style={{ animationDelay: `${i * 0.15}s` }}
               />
             ))}

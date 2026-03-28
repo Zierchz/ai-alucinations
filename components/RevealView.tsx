@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle, ShieldAlert } from "lucide-react";
 import type { Question, Option } from "@/lib/types";
 import { highlight } from "@/lib/highlight";
 
@@ -34,8 +34,8 @@ export default function RevealView({
         className={`flex items-center gap-3 justify-center mb-6 px-6 py-3 rounded-xl border-2 font-mono font-bold text-lg transition-all
           ${
             revealData.correct
-              ? "border-[#4ec9b0] bg-[#4ec9b0]/10 text-[#4ec9b0]"
-              : "border-[#ff6b6b] bg-[#ff6b6b]/10 text-[#ff6b6b]"
+              ? "border-[#3fb950] bg-[#3fb950]/10 text-[#3fb950]"
+              : "border-[#f85149] bg-[#f85149]/10 text-[#f85149]"
           }`}
       >
         <span>
@@ -56,10 +56,16 @@ export default function RevealView({
       </div>
 
       {/* Header */}
-      <div className="border-l-4 border-[#4ec9b0] pl-5 mb-6">
-        <h2 className="text-xl font-bold font-mono text-[#4ec9b0]">
-          Respuesta: Opción {revealData.answer} es la alucinación
+      <div className="border-l-4 border-[#f0883e] pl-5 mb-6">
+        <h2 className="text-xl font-bold font-mono text-[#f0883e]">
+          Respuesta: Opción {revealData.answer} es la vulnerable
         </h2>
+        <div className="flex items-center gap-2 mt-1">
+          <ShieldAlert size={14} className="text-[#ff7b72]" />
+          <span className="text-[#ff7b72] font-mono text-xs font-bold uppercase">
+            {question.vulnerability}
+          </span>
+        </div>
       </div>
 
       {/* Code grid */}
@@ -73,30 +79,30 @@ export default function RevealView({
               className={`relative rounded-xl p-4 font-mono text-xs border-2 transition-all duration-300
                 ${
                   isAnswer
-                    ? "border-[#4ec9b0] bg-linear-to-br from-[#1a3c2e] to-[#152d22] shadow-lg shadow-[#4ec9b0]/20"
+                    ? "border-[#f85149] bg-linear-to-br from-[#2d1117] to-[#1a0a0a] shadow-lg shadow-[#f85149]/20"
                     : isWrongAnswer
-                      ? "border-[#ff6b6b] bg-linear-to-br from-[#3c1e1e] to-[#2d1515] shadow-lg shadow-[#ff6b6b]/20"
-                      : "border-[#333] bg-[#252526] opacity-50"
+                      ? "border-[#f0883e] bg-linear-to-br from-[#2d1f17] to-[#1a1510] shadow-lg shadow-[#f0883e]/20"
+                      : "border-[#21262d] bg-[#161b22] opacity-50"
                 }
               `}
             >
               {isAnswer && (
-                <span className="absolute top-2 right-2 bg-[#4ec9b0] text-[#1e1e1e] text-xs font-bold px-2 py-0.5 rounded">
-                  ALUCINACIÓN
+                <span className="absolute top-2 right-2 bg-[#f85149] text-white text-xs font-bold px-2 py-0.5 rounded">
+                  VULNERABLE
                 </span>
               )}
               {isWrongAnswer && (
-                <span className="absolute top-2 right-2 bg-[#ff6b6b] text-white text-xs font-bold px-2 py-0.5 rounded">
+                <span className="absolute top-2 right-2 bg-[#f0883e] text-white text-xs font-bold px-2 py-0.5 rounded">
                   Tu respuesta
                 </span>
               )}
               <span
-                className={`font-bold mr-2 ${isAnswer ? "text-[#4ec9b0]" : isWrongAnswer ? "text-[#ff6b6b]" : "text-[#888]"}`}
+                className={`font-bold mr-2 ${isAnswer ? "text-[#f85149]" : isWrongAnswer ? "text-[#f0883e]" : "text-[#8b949e]"}`}
               >
                 {opt}:
               </span>
               <pre
-                className={`inline whitespace-pre-wrap wrap-break-word ${isAnswer ? "text-[#a8e6d4]" : isWrongAnswer ? "text-[#ff9999]" : "text-[#666]"}`}
+                className={`inline whitespace-pre-wrap wrap-break-word ${isAnswer ? "text-[#ffa198]" : isWrongAnswer ? "text-[#ffb86c]" : "text-[#484f58]"}`}
                 dangerouslySetInnerHTML={{
                   __html: highlight(question.options[opt], question.language),
                 }}
@@ -107,9 +113,9 @@ export default function RevealView({
       </div>
 
       {/* Explanation */}
-      <div className="bg-linear-to-br from-[#2d2d2d] to-[#252526] border-l-4 border-[#4ec9b0] rounded-xl p-5 mb-6">
-        <span className="text-[#4ec9b0] font-bold font-mono">¿Por qué? </span>
-        <span className="text-[#d4d4d4] font-mono text-sm leading-relaxed">
+      <div className="bg-linear-to-br from-[#1c1e24] to-[#161b22] border-l-4 border-[#f0883e] rounded-xl p-5 mb-6">
+        <span className="text-[#f0883e] font-bold font-mono">¿Por qué es vulnerable? </span>
+        <span className="text-[#c9d1d9] font-mono text-sm leading-relaxed">
           {revealData.explanation}
         </span>
       </div>
@@ -117,7 +123,7 @@ export default function RevealView({
       <div className="flex justify-center">
         <button
           onClick={onNext}
-          className="px-8 py-3 bg-linear-to-r from-[#007acc] to-[#4ec9b0] text-white font-bold font-mono rounded-xl hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg shadow-[#007acc]/20 cursor-pointer"
+          className="px-8 py-3 bg-linear-to-r from-[#f0883e] to-[#ff7b72] text-white font-bold font-mono rounded-xl hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg shadow-[#f0883e]/20 cursor-pointer"
         >
           {nextLabel ??
             (isLast ? "Ver Resultados Finales" : "Siguiente Pregunta →")}

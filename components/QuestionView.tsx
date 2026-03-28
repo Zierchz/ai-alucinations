@@ -1,6 +1,6 @@
 "use client";
 
-import { Gamepad2 } from "lucide-react";
+import { Gamepad2, ShieldAlert } from "lucide-react";
 import { useEffect, useRef } from "react";
 import type { Question, Option } from "@/lib/types";
 import { highlight } from "@/lib/highlight";
@@ -104,7 +104,7 @@ export default function QuestionView({
   isPending,
   timeLeft,
 }: Props) {
-  const displayed = Math.min(timeLeft - 1, 15);
+  const displayed = Math.min(timeLeft - 1, 30);
   const isUrgent = displayed <= 5;
   const lastPlayedRef = useRef<number | null>(null);
   const timeUpPlayedRef = useRef(false);
@@ -130,20 +130,20 @@ export default function QuestionView({
   }, [displayed]);
 
   // SVG circle clock params
-  const r = 32;
+  const r = 31;
   const circ = 2 * Math.PI * r;
-  const dash = circ * (displayed / 15);
+  const dash = circ * (displayed / 30);
 
   return (
     <div className="max-w-4xl mx-auto animate-fade-in">
       {/* Player indicator */}
       <div className="flex items-center gap-3 mb-6 justify-center">
-        <div className="h-px flex-1 bg-[#333]" />
-        <div className="px-5 py-2 bg-[#252526] border border-[#4ec9b0] rounded-full font-mono text-[#4ec9b0] text-sm font-bold flex items-center gap-2">
+        <div className="h-px flex-1 bg-[#21262d]" />
+        <div className="px-5 py-2 bg-[#161b22] border border-[#f0883e] rounded-full font-mono text-[#f0883e] text-sm font-bold flex items-center gap-2">
           <Gamepad2 size={16} />
           Turno de <span className="text-white">{playerName}</span>
         </div>
-        <div className="h-px flex-1 bg-[#333]" />
+        <div className="h-px flex-1 bg-[#21262d]" />
       </div>
 
       {/* Header + Clock */}
@@ -157,7 +157,7 @@ export default function QuestionView({
               cy="40"
               r={r}
               fill="none"
-              stroke="#3e3e42"
+              stroke="#30363d"
               strokeWidth="5"
             />
             {/* Arc */}
@@ -166,7 +166,7 @@ export default function QuestionView({
               cy="40"
               r={r}
               fill="none"
-              stroke={isUrgent ? "#f44747" : "#4ec9b0"}
+              stroke={isUrgent ? "#f85149" : "#f0883e"}
               strokeWidth="5"
               strokeLinecap="round"
               strokeDasharray={`${dash} ${circ}`}
@@ -181,26 +181,32 @@ export default function QuestionView({
               fontSize="18"
               fontWeight="bold"
               fontFamily="monospace"
-              fill={isUrgent ? "#f44747" : "#4ec9b0"}
+              fill={isUrgent ? "#f85149" : "#f0883e"}
             >
               {displayed}
             </text>
           </svg>
           {isUrgent && (
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#f44747] rounded-full animate-ping" />
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#f85149] rounded-full animate-ping" />
           )}
         </div>
 
         {/* Header text */}
-        <div className="border-l-4 border-[#4ec9b0] pl-5">
-          <h2 className="text-xl md:text-2xl font-bold font-mono text-[#4ec9b0]">
-            Lenguaje — {question.language}
+        <div className="border-l-4 border-[#f0883e] pl-5">
+          <h2 className="text-xl md:text-2xl font-bold font-mono text-[#f0883e]">
+            {question.language}
           </h2>
-          <p className="text-[#ce9178] font-mono text-sm md:text-base mt-1">
+          <div className="flex items-center gap-2 mt-1">
+            <ShieldAlert size={14} className="text-[#ff7b72]" />
+            <span className="text-[#ff7b72] font-mono text-xs font-bold uppercase tracking-wider">
+              {question.vulnerability}
+            </span>
+          </div>
+          <p className="text-[#c9d1d9] font-mono text-sm md:text-base mt-1">
             Tarea: {question.task}
           </p>
-          <p className="text-[#888] font-mono text-xs mt-2">
-            ¿Donde está la alucinación?
+          <p className="text-[#8b949e] font-mono text-xs mt-2">
+            ¿Cuál código tiene la vulnerabilidad?
           </p>
         </div>
       </div>
@@ -212,18 +218,18 @@ export default function QuestionView({
             key={opt}
             onClick={() => onAnswer(opt)}
             disabled={!!selected || isPending}
-            className={`relative text-left bg-linear-to-br from-[#1e1e1e] to-[#252526] border-2 border-[#007acc] rounded-xl p-5 font-mono text-sm transition-all duration-200 cursor-pointer
-              hover:border-[#4ec9b0] hover:shadow-lg hover:shadow-[#007acc]/20 hover:scale-[1.02]
+            className={`relative text-left bg-linear-to-br from-[#0d1117] to-[#161b22] border-2 border-[#30363d] rounded-xl p-5 font-mono text-sm transition-all duration-200 cursor-pointer
+              hover:border-[#f0883e] hover:shadow-lg hover:shadow-[#f0883e]/20 hover:scale-[1.02]
               active:scale-[0.98]
-              disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:border-[#007acc]
-              ${selected === opt ? "border-[#4ec9b0] scale-[1.02]" : ""}
+              disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:border-[#30363d]
+              ${selected === opt ? "border-[#f0883e] scale-[1.02]" : ""}
             `}
           >
-            <span className="absolute top-2 right-3 bg-linear-to-br from-[#007acc] to-[#0098ff] text-white text-xs font-bold px-2.5 py-1 rounded-md">
+            <span className="absolute top-2 right-3 bg-linear-to-br from-[#f0883e] to-[#ff7b72] text-white text-xs font-bold px-2.5 py-1 rounded-md">
               {opt}
             </span>
             <pre
-              className="text-[#d4d4d4] text-xs md:text-sm leading-relaxed whitespace-pre-wrap wrap-break-word pr-8"
+              className="text-[#c9d1d9] text-xs md:text-sm leading-relaxed whitespace-pre-wrap wrap-break-word pr-8"
               dangerouslySetInnerHTML={{
                 __html: highlight(question.options[opt], question.language),
               }}
@@ -238,7 +244,7 @@ export default function QuestionView({
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className="w-2 h-2 bg-[#4ec9b0] rounded-full animate-bounce"
+                className="w-2 h-2 bg-[#f0883e] rounded-full animate-bounce"
                 style={{ animationDelay: `${i * 0.15}s` }}
               />
             ))}
